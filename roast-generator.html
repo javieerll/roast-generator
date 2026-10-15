@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#140c07">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="Escribe un nombre y genera un roast o un elogio exagerado. El mismo nombre suelta siempre la misma frase.">
+<meta property="og:title" content="Brasas · Generador de roasts">
+<meta property="og:description" content="Un nombre, una frase para reenviar. Roast sarcástico o elogio exagerado.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_ES">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Brasas · Generador de roasts">
+<meta name="twitter:description" content="Un nombre, una frase para reenviar.">
+<title>Brasas · Generador de roasts</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A5%3C/text%3E%3C/svg%3E">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          coal: "#140c07",
+          ember: "#2a160e"
+        }
+      }
+    }
+  };
+</script>
+<style>
+  :root { color-scheme: dark; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: #140c07;
+    color: #fff4ea;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  button, input { font: inherit; color: inherit; }
+  button, a { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  :focus-visible { outline: 2px solid #ff8a3d; outline-offset: 3px; }
+  .is-hidden { display: none !important; }
+  .stage {
+    background:
+      radial-gradient(880px 420px at 50% -14%, rgba(255, 90, 31, .42), transparent 58%),
+      radial-gradient(520px 300px at 100% 20%, rgba(239, 59, 47, .18), transparent 62%),
+      radial-gradient(420px 260px at 0% 86%, rgba(255, 140, 40, .12), transparent 64%),
+      #140c07;
+  }
+  body[data-mode="compliment"] {
+    background:
+      radial-gradient(880px 420px at 50% -14%, rgba(255, 168, 56, .38), transparent 58%),
+      radial-gradient(480px 280px at 100% 16%, rgba(255, 90, 31, .16), transparent 60%),
+      #140c07;
+  }
+  .ambient { display: none; }
+  @media (min-width: 768px) {
+    .ambient { display: block; }
+  }
+  .float-bit {
+    position: absolute;
+    bottom: -8vh;
+    opacity: 0;
+    animation: drift 15s linear infinite;
+  }
+  @keyframes drift {
+    0% { transform: translateY(0) scale(.85); opacity: 0; }
+    12% { opacity: .4; }
+    100% { transform: translateY(-115vh) scale(1.1); opacity: 0; }
+  }
+  @keyframes slam {
+    from { opacity: 0; transform: translateY(18px) scale(.97) rotate(-.4deg); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes pop {
+    from { opacity: 0; transform: translateY(10px) scale(.98); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  .result-in { animation: slam .48s cubic-bezier(.2, .85, .2, 1); }
+  .extra { animation: pop .4s both; }
+  .extra:nth-child(2) { animation-delay: .05s; }
+  .extra:nth-child(3) { animation-delay: .1s; }
+  .extra:nth-child(4) { animation-delay: .15s; }
+  .extra:nth-child(5) { animation-delay: .2s; }
+  .modal-bg { animation: fade .2s ease; }
+  .modal-panel { animation: pop .28s cubic-bezier(.2, .8, .2, 1); }
+  .is-on {
+    background: linear-gradient(90deg, #ff7a2f, #ef3b2f);
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(120, 30, 8, .35);
+  }
+  body[data-mode="compliment"] .is-on {
+    background: linear-gradient(90deg, #ffb020, #ff6a2a);
+    color: #2a1206;
+  }
+  .result-card {
+    background:
+      radial-gradient(440px 180px at 50% 0%, rgba(255, 106, 40, .32), transparent 70%),
+      #24150f;
+  }
+  body[data-mode="compliment"] .result-card {
+    background:
+      radial-gradient(440px 180px at 50% 0%, rgba(255, 186, 70, .28), transparent 70%),
+      #24180f;
+  }
+  #quote { overflow-wrap: anywhere; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+    .float-bit { display: none !important; }
+  }
+</style>
+</head>
+<body class="stage" data-mode="roast">
+  <div class="ambient pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
+    <span class="float-bit left-[5%] text-2xl" style="animation-delay: 0s">🔥</span>
+    <span class="float-bit left-[12%] text-lg" style="animation-delay: 3.4s">✨</span>
+    <span class="float-bit right-[6%] text-2xl" style="animation-delay: 1.5s">🌶️</span>
+    <span class="float-bit right-[13%] text-lg" style="animation-delay: 4.6s">🔥</span>
+  </div>
+
+  <main class="relative mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+    <header class="flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5 text-[15px] font-semibold tracking-tight">
+        <span class="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-orange-400 to-red-600 text-lg shadow-lg shadow-orange-950/50" aria-hidden="true">🔥</span>
+        Brasas
+      </div>
+      <p class="text-xs text-orange-100/70">Hecho para reenviar</p>
+    </header>
+
+    <section class="mt-8">
+      <p class="text-sm font-medium text-orange-300">Generador de roasts</p>
+      <h1 class="mt-1 font-serif text-[2.05rem] leading-[1.05] tracking-tight text-white">Dime un nombre. Suelto la frase.</h1>
+      <p class="mt-3 text-[15px] leading-relaxed text-orange-50/80">El mismo nombre devuelve siempre la misma línea. Así el reenvío no cambia a mitad de la broma.</p>
+    </section>
+
+    <form id="form" class="mt-6 rounded-3xl border border-orange-200/15 bg-[#24150f] p-4 shadow-2xl shadow-black/30" novalidate>
+      <label class="block">
+        <span class="mb-1.5 block text-sm font-medium text-orange-50">Nombre de la persona a roastar</span>
+        <input id="name" name="nombre" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" spellcheck="false" placeholder="Lucía" required class="w-full rounded-2xl border border-white/10 bg-[#140c07] px-4 py-3.5 text-base outline-none placeholder:text-orange-100/35 focus:border-orange-400">
+      </label>
+
+      <div class="mt-4">
+        <p id="mode-label" class="mb-1.5 text-sm font-medium text-orange-50">Modo</p>
+        <div class="grid grid-cols-2 gap-2 rounded-2xl bg-black/30 p-1" role="radiogroup" aria-labelledby="mode-label">
+          <button id="mode-roast" type="button" role="radio" aria-checked="true" class="is-on rounded-xl px-3 py-3 text-sm font-semibold">Roast</button>
+          <button id="mode-compliment" type="button" role="radio" aria-checked="false" class="rounded-xl px-3 py-3 text-sm font-semibold text-orange-50/80">Compliment</button>
+        </div>
+        <p class="mt-2 text-xs leading-relaxed text-orange-100/55">Roast es sarcástico. Compliment son elogios exagerados.</p>
+      </div>
+
+      <p id="error" class="is-hidden mt-3 text-sm text-orange-300" role="alert"></p>
+      <button id="go" type="submit" class="mt-4 w-full rounded-2xl bg-gradient-to-r from-orange-500 to-red-600 px-4 py-3.5 text-base font-semibold text-white shadow-lg shadow-red-950/40 active:scale-[0.98]">Generar</button>
+    </form>
+
+    <section id="result" class="result-card is-hidden mt-5 scroll-mt-4 rounded-3xl border border-orange-300/25 p-5" aria-live="polite">
+      <div class="flex items-center justify-between gap-3">
+        <p id="who" class="text-sm text-orange-100/75"></p>
+        <p id="stamp" class="shrink-0 rounded-full bg-orange-500/20 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-orange-50"></p>
+      </div>
+      <p id="quote" class="mt-4 font-serif text-[1.7rem] leading-snug tracking-tight text-white"></p>
+      <p class="mt-3 text-xs text-orange-100/50">Mismo nombre, misma frase.</p>
+      <p id="card-brand" data-marca class="mt-4 text-center text-[11px] uppercase tracking-[0.18em] text-orange-100/45"></p>
+      <div class="mt-4 grid gap-2 border-t border-white/10 pt-4">
+        <button id="btn-copy" type="button" class="rounded-2xl border border-orange-300/30 bg-orange-500/10 px-4 py-3 text-sm font-semibold active:scale-[0.98]">Copiar</button>
+        <button id="btn-x" type="button" class="rounded-2xl bg-white/10 px-4 py-3 text-sm font-semibold active:scale-[0.98]">X / Twitter</button>
+        <button id="btn-wa" type="button" class="rounded-2xl bg-[#25D366]/15 px-4 py-3 text-sm font-semibold text-[#d9ffe8] active:scale-[0.98]">WhatsApp</button>
+      </div>
+    </section>
+
+    <aside id="ad-slot" class="mt-5 rounded-2xl border border-dashed border-orange-200/30 bg-[#1c100b] px-4 py-5 text-center" aria-label="Espacio publicitario">
+      <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-orange-100/70">Ad Space</p>
+      <p class="mt-1 text-sm text-orange-50/45">320 × 100 · tu anuncio aquí</p>
+    </aside>
+
+    <!--
+      Segundo espacio publicitario. Quítalo del comentario si quieres otro banner.
+      <aside class="mt-3 rounded-2xl border border-dashed border-orange-200/30 px-4 py-5 text-center" aria-label="Espacio publicitario">Ad Space</aside>
+    -->
+
+    <section id="premium-block" class="mt-5 rounded-3xl border border-orange-300/20 bg-[#2a160e] p-4">
+      <div id="deep-locked">
+        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-orange-300">Premium</p>
+        <h2 class="mt-1 font-serif text-2xl tracking-tight">Cinco frases más</h2>
+        <p class="mt-2 text-sm leading-relaxed text-orange-50/75">El gratis es una. El pack suelta cinco líneas extra del mismo nombre, sin anuncio y sin marca de agua.</p>
+        <div class="mt-4 space-y-2" aria-hidden="true">
+          <div class="h-3 w-4/5 rounded-full bg-white/10"></div>
+          <div class="h-3 w-full rounded-full bg-white/10"></div>
+          <div class="h-3 w-2/3 rounded-full bg-white/10"></div>
+        </div>
+        <button id="btn-premium" type="button" class="mt-4 w-full rounded-2xl bg-gradient-to-r from-orange-600 to-red-700 px-4 py-3.5 text-sm font-semibold text-white active:scale-[0.98]">Generar 5 roasts extra (Premium)</button>
+      </div>
+      <div id="deep-open" class="is-hidden">
+        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-orange-300">Premium activo</p>
+        <h2 class="mt-1 font-serif text-2xl tracking-tight">Cinco más</h2>
+        <div id="deep-body" class="mt-3 space-y-2 text-sm leading-relaxed"></div>
+      </div>
+    </section>
+
+    <footer class="mt-8 text-center">
+      <p id="page-brand" data-marca class="text-[11px] uppercase tracking-[0.2em] text-orange-100/45"></p>
+    </footer>
+  </main>
+
+  <div id="modal" class="is-hidden fixed inset-0 z-50 grid place-items-end sm:place-items-center" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <button id="modal-backdrop" type="button" class="modal-bg absolute inset-0 bg-black/70" aria-label="Cerrar"></button>
+    <div class="modal-panel relative m-0 max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-orange-200/15 bg-[#1c100b] p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl sm:rounded-3xl">
+      <div class="flex items-start justify-between gap-3">
+        <h2 id="modal-title" class="font-serif text-2xl tracking-tight">5 roasts extra</h2>
+        <button id="modal-close" type="button" class="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-lg" aria-label="Cerrar">×</button>
+      </div>
+
+      <div id="step-email">
+        <p class="mt-2 text-sm leading-relaxed text-orange-50/75">Desbloquea las cinco frases de este nombre, o apunta el email para el acceso anticipado de los roasts personalizados con IA. El pack cuesta <span data-price></span>, un solo pago.</p>
+        <form id="email-form" class="mt-4" novalidate>
+          <label class="block">
+            <span class="mb-1.5 block text-sm font-medium">Tu email</span>
+            <input id="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="tu@correo.com" required class="w-full rounded-2xl border border-white/10 bg-[#140c07] px-4 py-3.5 text-base outline-none placeholder:text-orange-100/35 focus:border-orange-400">
+          </label>
+          <p id="email-msg" class="is-hidden mt-3 text-sm" role="status"></p>
+          <button id="email-submit" type="submit" class="mt-3 w-full rounded-2xl bg-gradient-to-r from-orange-500 to-red-600 px-4 py-3.5 text-sm font-semibold text-white active:scale-[0.98]">Quiero acceso anticipado</button>
+        </form>
+        <div class="my-4 flex items-center gap-3 text-xs uppercase tracking-[0.16em] text-orange-100/50">
+          <span class="h-px flex-1 bg-white/10"></span>
+          o
+          <span class="h-px flex-1 bg-white/10"></span>
+        </div>
+        <button id="btn-pay" type="button" class="w-full rounded-2xl border border-orange-300/35 bg-white/5 px-4 py-3.5 text-sm font-semibold active:scale-[0.98]">Ir al pago</button>
+      </div>
+
+      <div id="step-pay" class="is-hidden">
+        <p class="mt-2 text-sm leading-relaxed text-orange-50/75">Hueco del pago. Aquí se abre tu checkout de Stripe o Lemon Squeezy cuando el enlace sea el de verdad.</p>
+        <div class="mt-4 rounded-2xl border border-white/10 bg-black/25 p-4">
+          <p class="text-sm text-orange-50/70">Brasas · 5 frases extra</p>
+          <p class="mt-1 font-serif text-4xl" data-price></p>
+          <p class="mt-1 text-xs text-orange-100/55">Pago único · marcador de posición</p>
+        </div>
+        <button id="btn-sim" type="button" class="mt-4 w-full rounded-2xl bg-gradient-to-r from-orange-500 to-red-600 px-4 py-3.5 text-sm font-semibold text-white">Probar Premium en este navegador</button>
+        <p class="mt-3 text-xs leading-relaxed text-orange-100/55">No se cobra nada. Sirve para ver las cinco frases sin marca de agua. Cuando el enlace de pago sea el de verdad, esta prueba desaparece.</p>
+        <button id="btn-back" type="button" class="mt-3 w-full rounded-2xl bg-white/5 px-4 py-3 text-sm">Volver</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/*
+  Ajustes para publicar
+  MARCA              texto de "Powered by …". Se quita con Premium.
+  PRICE              precio que se enseña. El cobro real va en el checkout.
+  CHECKOUT_URL       enlace de Stripe o Lemon Squeezy.
+                     Mientras contenga "placeholder", el botón abre la prueba.
+  PREMIUM_TOKEN      al volver del pago, la dirección debe ser
+                     roast-generator.html?premium=EL_TOKEN
+                     Una página estática no comprueba el banco.
+  WAITLIST_ENDPOINT  vacío = el email se queda en este navegador.
+                     Si pegas una URL, se envía con POST { "email": "..." }.
+*/
+const MARCA = "TRASNIA";
+const PRICE = "1,99 €";
+const CHECKOUT_URL = "https://checkout.lemonsqueezy.com/checkout/buy/placeholder-brasas";
+const PREMIUM_TOKEN = "brasas-premium";
+const WAITLIST_ENDPOINT = "";
+
+const ROASTS = [
+  "{name} no llega tarde. El resto del grupo es que tiene prisa por vivir.",
+  "{name} tiene la energía de un WiFi de bar a las once de la noche.",
+  "Si el sentido común fuera un grupo, {name} estaría en silencio desde 2019.",
+  "{name} no es caos. Es una actualización que nadie pidió.",
+  "Pedirle un plan a {name} es como pedirle el menú a un microondas.",
+  "{name} entra en la habitación y el drama pide mesa para dos.",
+  "La agenda de {name} tiene un solo hueco: «ya veremos».",
+  "{name} puede hablar diez minutos para decir que no sabe.",
+  "Hay gente que piensa antes de hablar. {name} está en la lista de espera.",
+  "{name} no pierde las llaves. Las llaves han pedido el traslado.",
+  "El horóscopo de hoy es breve: no hagas caso a {name}.",
+  "{name} trae opiniones de sobremesa y datos escritos en una servilleta.",
+  "{name} dice «cinco minutos» con la misma seriedad que un político en campaña.",
+  "El grupo tiene un adulto responsable. No mires a {name}.",
+  "{name} abre un debate, suelta la frase y lo deja en visto.",
+  "Hay dos tipos de personas. {name} es el tercero, el que no leyó el cartel.",
+  "{name} llega a la historia por la mitad y aun así quiere el final.",
+  "Si la calma fuera una app, {name} la tendría sin actualizar desde el confinamiento."
+];
+
+const COMPLIMENTS = [
+  "{name} entra y la luz del sitio mejora por educación.",
+  "Si el carisma pagara impuestos, {name} estaría en un tramo aparte.",
+  "{name} puede leer la carta de un bar y sonar a discurso de los Oscar.",
+  "Las plantas del rellano giran hacia {name}. No es un rumor.",
+  "{name} no tiene aura. Tiene un turno de auroras haciendo horas extra.",
+  "Pedirle un favor a {name} es el mejor trámite de tu año.",
+  "El algoritmo recomienda a {name} y, por una vez, acierta.",
+  "{name} dice «buenos días» y el día, obediente, mejora.",
+  "Si la suerte tuviera contactos, el primero sería {name}.",
+  "{name} camina y el suelo se pone un poco más serio.",
+  "Un grupo sin {name} es solo gente mirando el móvil.",
+  "{name} cuenta una anécdota y hasta el distraído pide la segunda parte.",
+  "{name} podría vender hielo en enero, y el hielo daría las gracias.",
+  "El universo repasó la lista y dejó a {name} en negrita.",
+  "{name} no llega: aparece, que es otra categoría.",
+  "Hay gente que ilumina una mesa. {name} ilumina la calle de atrás.",
+  "{name} sonríe y un semáforo se pone en verde antes de hora.",
+  "Si el buen rollo tuviera portada, saldría {name}, y aun así se quedaría corta."
+];
+
+const ROAST_STAMPS = ["Sin piedad", "Archivado", "Te lo dije", "Modo brasa"];
+const COMPLIMENT_STAMPS = ["Demasiado", "Que lo suban", "Canon", "Aura"];
+
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = (id) => document.getElementById(id);
+
+let mode = "roast";
+let last = null;
+let lastFocus = null;
+
+function displayName(value) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function normalize(value) {
+  return displayName(value).toLocaleLowerCase("es");
+}
+
+function hashName(value) {
+  const clean = normalize(value);
+  let hash = 0;
+  for (let i = 0; i < clean.length; i++) {
+    hash = (hash * 33 + clean.charCodeAt(i)) >>> 0;
+  }
+  return hash;
+}
+
+function fill(template, name) {
+  return template.split("{name}").join(name);
+}
+
+function poolFor(nextMode) {
+  return nextMode === "roast" ? ROASTS : COMPLIMENTS;
+}
+
+function build(name, nextMode) {
+  const pool = poolFor(nextMode);
+  const sum = hashName(name);
+  const index = sum % pool.length;
+  const stamps = nextMode === "roast" ? ROAST_STAMPS : COMPLIMENT_STAMPS;
+  const extras = [];
+  for (let step = 1; extras.length < 5 && step < pool.length; step++) {
+    extras.push(fill(pool[(index + step) % pool.length], name));
+  }
+  return {
+    name: name,
+    mode: nextMode,
+    sum: sum,
+    line: fill(pool[index], name),
+    stamp: stamps[sum % stamps.length],
+    extras: extras
+  };
+}
+
+function isPremium() {
+  return localStorage.getItem("brasas_premium") === "1";
+}
+
+function shareUrl() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("premium");
+  url.hash = "";
+  return url.toString();
+}
+
+function shareLine() {
+  if (!last) return "";
+  if (last.mode === "roast") return "Acabo de roastar a " + last.name + ": " + last.line;
+  return "Acabo de elogiar a " + last.name + ": " + last.line;
+}
+
+function shareText(longForm) {
+  const line = shareLine();
+  if (!longForm) {
+    const url = shareUrl();
+    const budget = 270 - url.length - 1;
+    const short = line.length > budget ? line.slice(0, Math.max(20, budget - 1)).trimEnd() + "…" : line;
+    return short + "\n" + url;
+  }
+  const brand = isPremium() ? "" : "\n\nPowered by " + MARCA;
+  return line + "\n\nPrueba con otro nombre:\n" + shareUrl() + brand;
+}
+
+function paintBrand() {
+  document.querySelectorAll("[data-marca]").forEach((el) => {
+    el.textContent = "Powered by " + MARCA;
+  });
+  document.querySelectorAll("[data-price]").forEach((el) => {
+    el.textContent = PRICE;
+  });
+}
+
+function paintMode() {
+  const roastOn = mode === "roast";
+  $("mode-roast").setAttribute("aria-checked", roastOn ? "true" : "false");
+  $("mode-compliment").setAttribute("aria-checked", roastOn ? "false" : "true");
+  $("mode-roast").classList.toggle("is-on", roastOn);
+  $("mode-compliment").classList.toggle("is-on", !roastOn);
+  $("mode-roast").classList.toggle("text-orange-50/80", !roastOn);
+  $("mode-compliment").classList.toggle("text-orange-50/80", roastOn);
+  document.body.dataset.mode = mode;
+}
+
+function renderExtras() {
+  const box = $("deep-body");
+  box.replaceChildren();
+  if (!last) {
+    const note = document.createElement("p");
+    note.className = "text-orange-50/75";
+    note.textContent = "Premium está activo en este navegador. Genera un nombre para ver las cinco frases.";
+    box.appendChild(note);
+    return;
+  }
+  const intro = document.createElement("p");
+  intro.className = "text-orange-100/60";
+  intro.textContent = last.mode === "roast"
+    ? "Cinco roasts más de " + last.name + "."
+    : "Cinco elogios más de " + last.name + ".";
+  box.appendChild(intro);
+  last.extras.forEach((line) => {
+    const item = document.createElement("p");
+    item.className = "extra rounded-2xl bg-black/30 px-3 py-2.5 text-orange-50";
+    item.textContent = line;
+    box.appendChild(item);
+  });
+}
+
+function applyPremium() {
+  const on = isPremium();
+  document.querySelectorAll("[data-marca]").forEach((el) => {
+    el.classList.toggle("is-hidden", on);
+  });
+  $("ad-slot").classList.toggle("is-hidden", on);
+  $("deep-locked").classList.toggle("is-hidden", on);
+  $("deep-open").classList.toggle("is-hidden", !on);
+  if (on) renderExtras();
+}
+
+function showError(message) {
+  const el = $("error");
+  el.textContent = message;
+  el.classList.remove("is-hidden");
+}
+
+function showResult(entry) {
+  last = entry;
+  const card = $("result");
+  $("who").textContent = (entry.mode === "roast" ? "🔥  " : "👑  ") + entry.name;
+  $("stamp").textContent = entry.stamp;
+  $("quote").textContent = entry.line;
+  $("btn-copy").textContent = "Copiar";
+  card.classList.remove("is-hidden", "result-in");
+  void card.offsetWidth;
+  card.classList.add("result-in");
+  if (isPremium()) renderExtras();
+  card.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+}
+
+function generate() {
+  const name = displayName($("name").value);
+  if (!name) {
+    showError("Escribe un nombre. Sin nombre no hay frase.");
+    $("name").focus();
+    return;
+  }
+  $("error").classList.add("is-hidden");
+  showResult(build(name, mode));
+}
+
+function setMode(next) {
+  if (mode === next) return;
+  mode = next;
+  paintMode();
+  if (last) generate();
+}
+
+function openModal() {
+  lastFocus = document.activeElement;
+  $("modal").classList.remove("is-hidden");
+  $("step-email").classList.remove("is-hidden");
+  $("step-pay").classList.add("is-hidden");
+  document.body.style.overflow = "hidden";
+  window.setTimeout(() => $("email").focus(), 30);
+}
+
+function closeModal() {
+  $("modal").classList.add("is-hidden");
+  document.body.style.overflow = "";
+  if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
+}
+
+function unlockPremium() {
+  localStorage.setItem("brasas_premium", "1");
+  applyPremium();
+  closeModal();
+  $("premium-block").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+}
+
+function placeholderCheckout() {
+  return CHECKOUT_URL.indexOf("placeholder") !== -1;
+}
+
+async function saveEmail(email) {
+  const key = "brasas_waitlist";
+  let saved = [];
+  try { saved = JSON.parse(localStorage.getItem(key) || "[]"); } catch (err) { saved = []; }
+  if (!Array.isArray(saved)) saved = [];
+  if (saved.indexOf(email) === -1) saved.push(email);
+  localStorage.setItem(key, JSON.stringify(saved));
+  if (!WAITLIST_ENDPOINT) return "local";
+  const response = await fetch(WAITLIST_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    body: JSON.stringify({ email: email })
+  });
+  if (!response.ok) throw new Error("waitlist");
+  return "remote";
+}
+
+function fallbackCopy(text) {
+  const area = document.createElement("textarea");
+  area.value = text;
+  area.setAttribute("readonly", "");
+  area.style.position = "fixed";
+  area.style.left = "-9999px";
+  document.body.appendChild(area);
+  area.select();
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch (err) { ok = false; }
+  area.remove();
+  return ok;
+}
+
+$("form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  generate();
+});
+
+$("mode-roast").addEventListener("click", () => setMode("roast"));
+$("mode-compliment").addEventListener("click", () => setMode("compliment"));
+
+$("btn-copy").addEventListener("click", async () => {
+  if (!last) return;
+  const text = shareText(true);
+  let ok = false;
+  try {
+    await navigator.clipboard.writeText(text);
+    ok = true;
+  } catch (err) {
+    ok = fallbackCopy(text);
+  }
+  $("btn-copy").textContent = ok ? "Copiado" : "No se ha podido copiar";
+  window.setTimeout(() => { $("btn-copy").textContent = "Copiar"; }, 1800);
+});
+
+$("btn-x").addEventListener("click", () => {
+  if (!last) return;
+  window.open("https://x.com/intent/tweet?text=" + encodeURIComponent(shareText(false)), "_blank", "noopener,noreferrer");
+});
+
+$("btn-wa").addEventListener("click", () => {
+  if (!last) return;
+  window.open("https://wa.me/?text=" + encodeURIComponent(shareText(true)), "_blank", "noopener,noreferrer");
+});
+
+$("btn-premium").addEventListener("click", openModal);
+$("modal-close").addEventListener("click", closeModal);
+$("modal-backdrop").addEventListener("click", closeModal);
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !$("modal").classList.contains("is-hidden")) closeModal();
+});
+
+$("email-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const input = $("email");
+  const msg = $("email-msg");
+  const email = input.value.trim();
+  msg.classList.remove("is-hidden");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    msg.className = "mt-3 text-sm text-orange-300";
+    msg.textContent = "Ese email no parece completo.";
+    input.focus();
+    return;
+  }
+  const button = $("email-submit");
+  button.disabled = true;
+  try {
+    const where = await saveEmail(email);
+    msg.className = "mt-3 text-sm text-emerald-300";
+    msg.textContent = where === "local"
+      ? "Apuntado en este navegador. Cuando conectes la lista, este correo saldrá hacia allí."
+      : "Apuntado. Te avisaremos cuando se abran los roasts con IA.";
+  } catch (err) {
+    msg.className = "mt-3 text-sm text-orange-300";
+    msg.textContent = "No se ha podido apuntar. Prueba otra vez dentro de un momento.";
+  }
+  button.disabled = false;
+});
+
+$("btn-pay").addEventListener("click", () => {
+  if (placeholderCheckout()) {
+    $("step-email").classList.add("is-hidden");
+    $("step-pay").classList.remove("is-hidden");
+    $("btn-sim").focus();
+    return;
+  }
+  window.open(CHECKOUT_URL, "_blank", "noopener,noreferrer");
+});
+
+$("btn-sim").addEventListener("click", unlockPremium);
+$("btn-back").addEventListener("click", () => {
+  $("step-pay").classList.add("is-hidden");
+  $("step-email").classList.remove("is-hidden");
+  $("email").focus();
+});
+
+(function init() {
+  paintBrand();
+  paintMode();
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("premium") === PREMIUM_TOKEN) {
+    localStorage.setItem("brasas_premium", "1");
+    params.delete("premium");
+    const next = params.toString();
+    history.replaceState({}, "", window.location.pathname + (next ? "?" + next : "") + window.location.hash);
+  }
+  applyPremium();
+})();
+</script>
+<noscript>
+  <p style="margin:16px;font-family:sans-serif">Activa JavaScript para generar la frase.</p>
+</noscript>
+</body>
+</html>
