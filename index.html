@@ -174,16 +174,6 @@
       </div>
     </section>
 
-    <aside id="ad-slot" class="mt-5 rounded-2xl border border-dashed border-orange-200/30 bg-[#1c100b] px-4 py-5 text-center" aria-label="Espacio publicitario">
-      <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-orange-100/70">Ad Space</p>
-      <p class="mt-1 text-sm text-orange-50/45">320 × 100 · tu anuncio aquí</p>
-    </aside>
-
-    <!--
-      Segundo espacio publicitario. Quítalo del comentario si quieres otro banner.
-      <aside class="mt-3 rounded-2xl border border-dashed border-orange-200/30 px-4 py-5 text-center" aria-label="Espacio publicitario">Ad Space</aside>
-    -->
-
     <section id="premium-block" class="mt-5 rounded-3xl border border-orange-300/20 bg-[#2a160e] p-4">
       <div id="deep-locked">
         <p class="text-xs font-semibold uppercase tracking-[0.16em] text-orange-300">Premium</p>
@@ -259,13 +249,13 @@
                      /?premium=EL_TOKEN
                      Una página estática no comprueba el banco.
   WAITLIST_ENDPOINT  vacío = el email se queda en este navegador.
-                     Si pegas una URL, se envía con POST { "email": "..." }.
+                     Si pegas una URL, se envía con POST (formulario) email=...
 */
 const MARCA = "TRASNIA";
 const PRICE = "1,99 €";
 const CHECKOUT_URL = "https://buy.stripe.com/7sY4greL83A25kjd6CgIo04"; // Stripe (modo REAL)
 const PREMIUM_TOKEN = "brasas-premium";
-const WAITLIST_ENDPOINT = "";
+const WAITLIST_ENDPOINT = "https://trasnia.app.n8n.cloud/webhook/brasas-waitlist"; // n8n → tabla brasas_waitlist
 
 const ROASTS = [
   "{name} no llega tarde. El resto del grupo es que tiene prisa por vivir.",
@@ -444,7 +434,6 @@ function applyPremium() {
   document.querySelectorAll("[data-marca]").forEach((el) => {
     el.classList.toggle("is-hidden", on);
   });
-  $("ad-slot").classList.toggle("is-hidden", on);
   $("deep-locked").classList.toggle("is-hidden", on);
   $("deep-open").classList.toggle("is-hidden", !on);
   if (on) renderExtras();
@@ -524,8 +513,7 @@ async function saveEmail(email) {
   if (!WAITLIST_ENDPOINT) return "local";
   const response = await fetch(WAITLIST_ENDPOINT, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "Accept": "application/json" },
-    body: JSON.stringify({ email: email })
+    body: new URLSearchParams({ email: email })
   });
   if (!response.ok) throw new Error("waitlist");
   return "remote";
